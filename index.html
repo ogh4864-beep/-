@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інтерактивна книга: Останній листок</title>
+    <style>
+        :root {
+            --bg-cozy: #f4eae1;
+            --text-dark: #2c2520;
+            --accent-gold: #c9933b;
+            --accent-green: #4a6741;
+            --accent-blue: #5d737e;
+            --border-vintage: #d3c2b0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Georgia', serif;
+        }
+
+        body {
+            background-color: #1a1613;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #book-container {
+            background-color: var(--bg-cozy);
+            width: 100%;
+            max-width: 900px;
+            height: 600px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 8px solid #3d3126;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease-in-out;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .header-banner {
+            text-align: center;
+            border-bottom: 2px dashed var(--border-vintage);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .header-banner h1 {
+            font-size: 24px;
+            color: #5c2c16;
+            letter-spacing: 1px;
+        }
+
+        .content-layout {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .text-side {
+            flex: 1;
+            font-size: 17px;
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        .interactive-side {
+            flex: 1;
+            height: 100%;
+            max-height: 350px;
+            border: 4px double var(--border-vintage);
+            background: #fff;
+            position: relative;
+            border-radius: 6px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Навігація */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px dashed var(--border-vintage);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        button {
+            background-color: #5c2c16;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--accent-gold);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .step-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Слайд 1: Айсбрейк */
+        .icebreaker-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .ice-item {
+            background: #fdf8f4;
+            border: 2px solid var(--border-vintage);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .ice-item:hover {
+            background: var(--accent-gold);
+            color: white;
+            transform: scale(1.03);
+        }
+
+        /* Слайд 2: Пошук предметів */
+        .search-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .search-item {
+            width: 80px;
+            height: 80px;
+            background: #eee;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 24px;
+            border: 2px solid var(--accent-gold);
+            transition: background 0.3s;
+        }
+
+        .search-item.found {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        /* Слайд 3: Рефлексія */
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            margin-top: 15px;
+            border: 2px solid var(--border-vintage);
+            border-radius: 6px;
+            resize: none;
+            font-family: sans-serif;
+        }
+
+        /* Слайд 4: Зворотний рахунок */
+        .ivy-branch {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .leaf-btn {
+            background: #cfb997;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .leaf-btn.clicked {
+            background: #8b5a2b;
+            color: #ccc;
+            text-decoration: line-through;
+        }
+
+        /* Слайд 6: Штора */
+        .window-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #b0c4de;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .brick-wall {
+            width: 100%;
+            height: 100%;
+            background: #8b4513; /* Імітація стіни */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .last-leaf {
+            font-size: 50px;
+            color: #228b22;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .window-shutter {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #4a5d4e;
+            transition: transform 0.5s ease-out;
+            transform-origin: top;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            color: white;
+            padding-bottom: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Поп-апи підказок */
+        .toast {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+            width: 80%;
+        }
+
+        /* Адаптивність */
+        @media (max-width: 768px) {
+            #book-container { height: auto; min-height: 550px; }
+            .content-layout { flex-direction: column; }
+            .interactive-side { width: 100%; min-height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="book-container">
+
+    <div class="slide active" id="slide-1">
+        <div class="header-banner">
+            <h1>КРИГОЛАМ: ДЕ ВАША ДУША СЬОГОДНІ?</h1>
+        </div>
+        <div class="content-layout">
+            <div class="text-side">
+                <p>Вітаємо в інтерактивній книзі за оповіданням О. Генрі «Останній листок». <br><br>Прислухайся до себе перед початком мандрівки. Обери предмет на панелі праворуч, який найкраще відображає твій теперішній емоційний стан, та дізнайся його приховану силу.</p>
+            </div>
+            <div class="interactive-side">
+                <div class="icebreaker-grid">
+                    <div class="ice-item" onclick="showIce('🎨 Чисте полотно — відчуваю творчу енергію, готовність створювати нове!')">Чисте полотно</div>
+                    <div class="ice-item" onclick="showIce('🍂 Листок плюща — почуваюся трохи втомлено, але тримаюся з останніх сил.')">Листок плюща</div>
+                    <div class="ice-item" onclick="showIce('🏮 Старий ліхтар — маю бажання допомагати іншим та ділитися теплом.')">Старий ліхтар</div>
+                    <div class="ice-item" onclick="showIce('☕ Чашка чаю — потребую максимального затишку, спокою та перезавантаження.')">Чашка чаю</div>
+                </div>
+                <div class="toast" id="ice-toast"></div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button disabled>Назад</button>
+            <span class="step-info">Сторінка 1 з 7</span>
+            <button onclick="nextSlide()">Вперед</button>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="header-banner">
+            <h1>1. Колонія Грініч-Вілідж</h1>
+        </div>
+        <div class="content-layout">
+            <div class="text-side">
+                <p>У старій та чудернацькій колонії художників Грініч-Вілідж у пошуках низької квартирної платні оселилися дві молоді майстрині — Сью та Джонсі. Вони познайомилися в невеликому ресторанчику й швидко зрозуміли, що їхні смаки цілком збігаються. Дівчата вирішили заснувати спільну студію на самому горищі присадкуватого триповерхового будинку. Це було квітучого травня...</p>
+            </div>
+            <div class="interactive-side">
+                <div style="text-align:center; padding:10px;">
+                    <p style="font-size:14px; margin-bottom:10px;">Знайди 3 речі, які об'єднали подруг (клікни на них):</p>
+                    <div class="search-container">
+                        <div class="search-item" id="item1" onclick="findItem('item1', '🎨 Спільні погляди на Мистецтво!')">🎨</div>
+                        <div class="search-item" id="item2" onclick="findItem('item2', '🥗 Любов до салату з цикорію!')">🥗</div>
+                        <div class="search-item" id="item3" onclick="findItem('item3', '👗 Мода на широкі рукави суконь!')">👗</div>
+                    </div>
+                </div>
+                <div class="toast" id="search-toast"></div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="prevSlide()">Назад</button>
+            <span class="step-info">Сторінка 2 з 7</span>
+            <button onclick="nextSlide()">Вперед</button>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <div class="header-banner">
+            <h1>2. Підступний пришелець</h1>
+        </div>
+        <div class="content-layout">
+            <div class="text-side">
+                <p>А в листопаді холодний, невидимий пришелець, якого лікарі називали Пневмонією, почав бродити по колонії, торкаючись людей своїми крижаними пальцями. Він підкосив і тендітну Джонсі. <br><br>Дівчина лежала нерухомо, втративши будь-який інтерес до життя. Лікар констатував: у неї один шанс із десяти, і цей шанс — її власне бажання жити.</p>
+            </div>
+            <div class="interactive-side" style="flex-direction:column; padding:20px; justify-content:center;">
+                <p style="font-size:14px; font-weight:bold; text-align:center;">Джонсі мріяла намалювати Неаполітанську затоку, але здалася. А яка мрія чи мета надихає тебе?</p>
+                <textarea placeholder="Напиши свої думки тут..."></textarea>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="prevSlide()">Назад</button>
+            <span class="step-info">Сторінка 3 з 7</span>
+            <button onclick="nextSlide()">Вперед</button>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="header-banner">
+            <h1>3. Рахунок у зворотному порядку</h1>
+        </div>
+        <div class="content-layout">
+            <div class="text-side">
+                <p>Сью намагалася працювати над малюнком, коли раптом почула слабкий шепіт. Джонсі дивилася у вікно й рахувала листки на старому плющі, що чіплявся за сусідню цегляну стіну. <br><br>«Одинадцять... десять... дев'ять... — шепотіла вона. — Тепер вони падають швидко. Коли впаде останній листок, я помру. Я знаю це вже три дні».</p>
+            </div>
+            <div class="interactive-side">
+                <div class="ivy-branch">
+                    <p style="font-size:13px; text-align:center;">Допоможи порахувати листки (клікай від 10 до 7):</p>
+                    <div class="leaf-btn" id="l10" onclick="clickLeaf('l10', 10)">Листок 10</div>
+                    <div class="leaf-btn" id="l9" onclick="clickLeaf('l9', 9)">Листок 9</div>
+                    <div class="leaf-btn" id="l8" onclick="clickLeaf('l8', 8)">Листок 8</div>
+                    <div class="leaf-btn" id="l7" onclick="clickLeaf('l7', 7)">Листок 7... залишилося зовсім трохи</div>
+                </div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="prevSlide()">Назад</button>
+            <span class="step-info">Сторінка 4 з 7</span>
+            <button onclick="nextSlide()">Вперед</button>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="header-banner">
+            <h1>4. Старий майстер та його мрія</h1>
+        </div>
+        <div class="content-layout">
+            <div class="text-side">
+                <p>Сью кинулася за допомогою до старого Бермана — буркітливого художника, який мешкав поверхом нижче. Він уже сорок років тримав пензель у руках, але так і не спрогся створити свій омріяний шедевр, заробляючи лише копійки позуванням. <br><br>Дізнавшись про похмурі думки Джонсі, старий розлютився: «Хіба це можливо — вмирати через листя, що падає з клятого куща?!» Але в його очах з'явився таємний замисел...</p>
+            </div>
+            <div class="interactive-side" style="flex-direction:column; padding:15px;">
+                <p style="font-size:14px; text-align:center; font-weight:bold; margin-bottom:10px;">Як ви вважаєте, що мав зробити старий художник?</p>
+                <button style="width:100%; margin:5px 0;" onclick="alert('Цікава думка, але Берман вигадав дещо геніальніше!')">Переконати її словами</button>
+                <button style="width:100%; margin:5px 0;" onclick="alert('Чудова інтуїція! Переходь до наступної сторінки, щоб побачити це.')">Вчинити справжнє диво та обманути долю</button>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="prevSlide()">Назад</button>
+            <span class="step-info">Сторінка 5 з 7</span>
+            <button onclick="nextSlide()">Вперед</button>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <div class="header-banner">
+            <h1>5. Ранок несподіванки</h1>
+        </div>
+        <div class="content-layout">
+            <div class="text-side">
+                <p>Цілу ніч вирував лютий шторм. Прокинувшись уранці, Джонсі наказала Сью підняти зелену штору. Сью виконала це зі страхом у серці. <br><br>Але подивіться! Наперекір зливі й шаленому вітру, на цегляній стіні мужньо тримався один-єдиний листок плюща. Жовтіючи по краях, він лишався на місці. Джонсі довго дивилася на нього й прошепотіла: «Я була поганою... Хотіти вмерти — це гріх».</p>
+            </div>
+            <div class="interactive-side">
+                <div class="window-wrapper">
+                    <div class="brick-wall">
+                        <span class="last-leaf">🍃</span>
+                    </div>
+                    <div class="window-shutter" id="shutter" onclick="openShutter()">
+                        КЛІКНИ, ЩОБ ПІДНЯТИ ШТОРУ
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="prevSlide()">Назад</button>
+            <span class="step-info">Сторінка 6 з 7</span>
+            <button onclick="nextSlide()">Вперед</button>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-7">
+        <div class="header-banner">
+            <h1>6. Справжній шедевр Бермана</h1>
+        </div>
+        <div class="content-layout">
+            <div class="text-side">
+                <p>Джонсі швидко одужувала. Того ж вечора Сью обійняла подругу й розповіла їй правду: старий Берман щойно помер у лікарні від пневмонії. <br><br>Він захворів тієї самої жахливої штормової ночі. Двірник знайшов його промоклим до нитки. Поруч лежали драбина, розкидані пензлі, ліхтар та палітра із зеленою й жовтою фарбами. Листок не ворушився на вітрі. Бо старий Берман намалював його на стіні тієї ночі, коли впав справжній останній листок. Він усе ж створив свій шедевр, віддавши за нього життя...</p>
+            </div>
+            <div class="interactive-side" style="flex-direction:column; padding:20px; background:#faf5f0;">
+                <p style="font-weight:bold; font-size:14px; margin-bottom:10px;">Дай відповідь: Що зробило цей малюнок шедевром?</p>
+                <input type="radio" id="q1" name="final" value="1"> <label for="q1" style="font-size:13px;">Те, що він виглядав як справжній</label><br>
+                <input type="radio" id="q2" name="final" value="2"> <label for="q2" style="font-size:13px; font-weight:bold; color:var(--accent-green);">Те, що він врятував людське життя і подарував надію</label><br>
+                <button style="margin-top:15px;" onclick="checkQuiz()">Завершити урок</button>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button onclick="prevSlide()">Назад</button>
+            <span class="step-info">Сторінка 7 з 7</span>
+            <button disabled>Вперед</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentSlide = 1;
+    const totalSlides = 7;
+
+    function showSlide(index) {
+        document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+        document.getElementById(`slide-${index}`).classList.add('active');
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides) {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlide > 1) {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+    }
+
+    // Логіка для Слайду 1
+    function showIce(message) {
+        const toast = document.getElementById('ice-toast');
+        toast.innerText = message;
+        toast.style.display = 'block';
+    }
+
+    // Логіка для Слайду 2
+    let foundCount = 0;
+    function findItem(id, message) {
+        const item = document.getElementById(id);
+        if (!item.classList.contains('found')) {
+            item.classList.add('found');
+            foundCount++;
+            const toast = document.getElementById('search-toast');
+            toast.innerText = message;
+            toast.style.display = 'block';
+            if (foundCount === 3) {
+                setTimeout(() => { alert('Чудово! Ти відшукав усі три речі, які зблизили Сью та Джонсі.'); }, 500);
+            }
+        }
+    }
+
+    // Логіка для Слайду 4
+    let expectedLeaf = 10;
+    function clickLeaf(id, num) {
+        if (num === expectedLeaf) {
+            document.getElementById(id).classList.add('clicked');
+            expectedLeaf--;
+        } else if (num < expectedLeaf) {
+            alert("Джонсі рахує по черзі! Рахуй разом з нею.");
+        }
+    }
+
+    // Логіка для Слайду 6
+    function openShutter() {
+        const shutter = document.getElementById('shutter');
+        shutter.style.transform = 'scaleY(0)';
+        setTimeout(() => {
+            alert('Листок тримається! Він подарував Джонсі віру в життя.');
+        }, 600);
+    }
+
+    // Логіка для Слайду 7
+    function checkQuiz() {
+        const selected = document.querySelector('input[name="final"]:checked');
+        if (!selected) {
+            alert('Будь ласка, обери варіант відповіді!');
+            return;
+        }
+        if (selected.value === "2") {
+            alert('Правильно! Справжнє мистецтво здатне творити дива та рятувати життя. Дякую за участь у цьому інтерактивному уроці!');
+        } else {
+            alert('Подумай ще раз. Чи тільки в реалістичності була цінність шедевра Бермана?');
+        }
+    }
+</script>
+
+</body>
+</html>
